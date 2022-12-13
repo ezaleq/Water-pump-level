@@ -1,0 +1,100 @@
+R("<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css"
+        integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
+    <title>Bomba de agua</title>
+</head>
+
+<body>
+    <div class="container text-center">
+        <div class="row border">
+            <div class="col border p-2">
+                <h4>Estado actual del tanque</h4>
+                <div class="progress m-4">
+                    <div class="progress-bar w-100" role="progressbar" aria-valuenow="15" aria-valuemin="0"
+                        aria-valuemax="100">100%</div>
+                </div>
+            </div>
+        </div>
+        <div class="row border">
+            <div class="col border">
+                <div id="plot"></div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col pb-3 border">
+                <h4>Configuración</h4>
+                <div class="container">
+                    <div class="row">
+                        <div class="col">
+                            <input type="checkbox" id="automaticPump" class="form-check-input">
+                            <label for="automaticPump">Bomba automática</label>
+                        </div>
+                    </div>
+                    <div class="row p-3">
+                        <div class="col text-center">
+                            <label for="pumpStopTrigger">Tiempo de detección de insuficiencia de agua en la red</label>
+                            <input type="number" class="form-control" id="pumpStopTrigger" placeholder="10 (s)">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col">
+                            <label for="pumpMinTrigger">Activar cuando llegue al %</label>
+                            <input type="number" class="form-control" placeholder="50%" id="pumpMinTrigger">
+                        </div>
+                        <div class="col">
+                            <label for="pumpMaxTrigger">Apagar cuando llegue al %</label>
+                            <input type="number" class="form-control" placeholder="100%" id="pumpMaxTrigger">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.6.1.js"
+        integrity="sha256-3zlB5s2uwoUzrXK3BT7AX3FyvojsraNFxCc2vC/7pNI=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4"
+        crossorigin="anonymous"></script>
+    <script src="https://code.highcharts.com/8.0/highcharts.js"></script>
+
+    <script>
+        var chartT = new Highcharts.Chart({
+            chart: { renderTo: 'plot' },
+            title: { text: 'Llenado del tanque' },
+            series: [{
+                showInLegend: false,
+                data: []
+            }],
+            plotOptions: {
+                line: {
+                    animation: false,
+                    dataLabels: { enabled: true }
+                },
+                series: { color: '#059e8a' }
+            },
+            xAxis: {
+                type: 'datetime',
+                dateTimeLabelFormats: { second: '%H:%M:%S' }
+            },
+            yAxis: {
+                title: { text: 'Porcentaje %' }
+            },
+            credits: { enabled: false }
+        });
+    </script>
+</body>
+
+</html>
+")
