@@ -13,13 +13,13 @@ class WaterPumpManager {
     static unsigned short int timeToDetectWaterInsufficiency; // in seconds
     static unsigned short int waterTankHeight; // in cm
 
-    WaterPumpManager(WhatsappConfiguration wppConfig) {
-      this->wppNotificator = new WhatsappNotificator(wppConfig);
+    WaterPumpManager(WhatsappConfiguration wppConfig, unsigned int arrayLength) {
+      this->wppNotificator = new WhatsappNotificator(wppConfig, arrayLength);
     }
     static void CalculateWaterLevel(byte triggerPin, byte echoPin) {
       auto distance = GetDistance(triggerPin, echoPin);
       waterLevel = 100 - (distance * 100) / waterTankHeight;
-      if (waterLevel > 100) 
+      if (waterLevel > 100)
         CalculateWaterLevel(triggerPin, echoPin);
     }
     static bool ShouldWaterPumpStart() {

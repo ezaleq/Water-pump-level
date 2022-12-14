@@ -1,7 +1,6 @@
 #include "WhatsappNotificator.h"
 #include "WaterPumpManager.h"
 #include "ServerManager.h"
-
 ServerManager serverManager;
 
 auto t0 = millis();
@@ -10,7 +9,7 @@ byte echoPin = D5;
 byte triggerPin = D6;
 byte relayPin = D7;
 WaterPumpManager* waterPumpManager;
-String phones[] = {"whatsapp:+5491154541063"}; 
+String phones[] = {"whatsapp:+5491154541063"};
 WhatsappConfiguration wppConfig = {
   "AC46f7092d6da6bc5f1f714e8a9573d90b",
   "46f9d55b4d1247a36aa66c09ac714c05",
@@ -20,7 +19,7 @@ WhatsappConfiguration wppConfig = {
 
 void setup() {
   Serial.begin(9600);
-  waterPumpManager = new WaterPumpManager(wppConfig);
+  waterPumpManager = new WaterPumpManager(wppConfig, 1);
   // Initialize the output variables as outputs
   serverManager.ConnectToWiFi("Quevedo's Family", "42393445");
   serverManager.Initialize();

@@ -5,47 +5,49 @@
 #include <ESP8266HTTPClient.h>
 #include <WiFiClient.h>
 
+
+WiFiClientSecure client;
+
 struct WhatsappConfiguration
 {
-  char Sid[40];
-  char AuthToken[40];
+  String Sid;
+  String AuthToken;
   String From;
   String* To;
 };
 
 class WhatsappNotificator {
   public:
-    WhatsappNotificator(WhatsappConfiguration configuration) {
+    WhatsappNotificator(WhatsappConfiguration configuration, unsigned int arrayLength) {
       this->configuration = configuration;
+      this->arrayLength = arrayLength;
+      this->SetupClient();
     }
 
     void SendMessage(String message) {
-      for (byte i = 0; i < sizeof(this->configuration.To) / sizeof(String); i++) {
-        Serial.print("Setuping client for phone");
-        Serial.println(this->configuration.To[i]);
-        auto httpClient = SetupClient(this->configuration.To[i], message);
-        httpClient->POST("");
-        httpClient->end();
-        delete &httpClient;
+      for (byte i = 0; i < this->arrayLength; i++) {
+        String payload = "From=$from&To=$to&Body=$body";
+        this->configuration.From.replace("+", "%2B");
+        this->configuration.To[i].replace("+", "%2B");
+        payload.replace("$from", this->configuration.From);
+        payload.replace("$to", this->configuration.To[i]);
+        payload.replace("$body", message);
+        auto httpCode = this->httpClient.POST(payload);
+        auto response = this->httpClient.getString();
+        httpClient.end();
       }
     }
   private:
-    HTTPClient* SetupClient(String toNumber, String message) {
-      String url = "https://api.twilio.com/2010-04-01/Accounts/$Sid/Messages.json?From=$from&To=$to&Body=$body";
+    void SetupClient() {
+      client.setInsecure();
+      String url = "https://api.twilio.com/2010-04-01/Accounts/$Sid/Messages.json";
       url.replace("$Sid", this->configuration.Sid);
-      url.replace("$from", this->configuration.From);
-      url.replace("$body", message);
-      url.replace("$to", toNumber);
-      char* buff = new char[url.length() + 1];
-      url.toCharArray(buff, url.length());
-      HTTPClient* httpClient = new HTTPClient();
-      httpClient->begin(this->wifiClient, buff);
-      httpClient->addHeader("Content-Type", "application/x-www-form-urlencoded");
-      httpClient->setAuthorization(configuration.Sid, configuration.AuthToken);
-      delete buff;
-      return httpClient;
+      this->httpClient.begin(client, url);
+      this->httpClient.addHeader("content-type", "application/x-www-form-urlencoded");
+      this->httpClient.setAuthorization(configuration.Sid.c_str(), configuration.AuthToken.c_str());
     }
-    WiFiClient wifiClient;
+    unsigned int arrayLength = 0;
+    HTTPClient httpClient;
     WhatsappConfiguration configuration;
 };
 
