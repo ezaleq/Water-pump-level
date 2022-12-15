@@ -19,21 +19,15 @@ public:
 
   void SendMessage(String message)
   {
-    Serial.println("Sending message  '" + message +"'.");
-    for (unsigned int i = 0; i < config->ToLength; i++)
+    for (auto i = 0; i < config->ToLength; i++)
     {
-      Serial.println("Iterating i=" + String(i));
-      String payload = "From=$from&To=$to&Body=$body";
-      config->From.replace("+", "%2B");
-      config->To[i].replace("+", "%2B");
+      String payload = "From=whatsapp:$from&To=whatsapp:$to&Body=$body";
       payload.replace("$from", config->From);
       payload.replace("$to", config->To[i]);
       payload.replace("$body", message);
-      Serial.println(payload);
+      payload.replace("+", "%2B");
       auto httpCode = this->httpClient.POST(payload);
-      auto response = this->httpClient.getString();
-      Serial.println("HttpCode: " + String(httpCode));
-      Serial.println("Response: " + response);
+      Serial.println("HTTP Code: " + String(httpCode));
       httpClient.end();
     }
   }

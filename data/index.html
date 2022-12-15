@@ -152,6 +152,11 @@
                                 id="toPhone">
                         </div>
                     </div>
+                    <div class="row">
+                        <div class="col">
+                            <button type="button" class="btn btn-primary" id="saveConfig">Guardar</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -176,6 +181,7 @@
         $("#pumpRunning").hide();
         $("#waterError").hide();
         loadConfigurations();
+        $("#saveConfig").click(saveConfiguration);
         var chartT = new Highcharts.Chart({
             chart: { renderTo: 'plot' },
             title: { text: 'Llenado del tanque' },
@@ -238,7 +244,27 @@
                 $("#toPhone").val(data.toPhone.join(";"));
             });
         }
+
+        async function saveConfiguration() {
+            const params = new URLSearchParams();
+            params.append("automaticPump", $("#automaticPump").prop("checked") ? 1 : 0);
+            params.append("minWaterLevel", $("#pumpMinTrigger").val());
+            params.append("maxWaterLevel", $("#pumpMaxTrigger").val());
+            params.append("timeToDetectWaterInsufficiency", $("#pumpStopTrigger").val());
+            params.append("waterTankHeight", $("#tankHeight").val());
+            params.append("sid", $("#sid").val());
+            params.append("authToken", $("#token").val());
+            params.append("from", $("#fromPhone").val());
+            params.append("to", $("#toPhone").val().split(";"));
+            try {
+                await axios.post("/api/configuration", params);
+            }
+            catch (error) {
+                console.log(error);
+                alert("Hubo un error guardando la configuración. Revise la consola.");
+            }
+        }
     </script>
-</body>
+</body>D
 
 </html>

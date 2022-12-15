@@ -9,8 +9,8 @@ byte echoPin = D5;
 byte triggerPin = D6;
 byte relayPin = D7;
 bool alreadySentMessage = false;
-WaterPumpManager* waterPumpManager;
-WhatsappNotificator* wppNotificator;
+WaterPumpManager *waterPumpManager;
+WhatsappNotificator *wppNotificator;
 
 void setup()
 {
@@ -34,8 +34,8 @@ void loop()
   waterPumpManager->CalculateWaterLevel();
   if (WaterPumpManager::isRunning && ServerManager::waterPumpConfig->automaticPump)
   {
-    alreadySentMessage = false;
     waterPumpManager->CheckWaterLevel();
+    alreadySentMessage = false;
   }
   else if (waterPumpManager->ShouldWaterPumpStart())
   {
@@ -46,5 +46,10 @@ void loop()
   {
     wppNotificator->SendMessage("Se detectó una insuficiencia de corriente de agua en la red.\n Los sistemas automáticos de prendido de bomba fueron deshabilitados. Habilitelos nuevamente desde la página web una vez solucionado el problema.");
     alreadySentMessage = true;
+  }
+  else if (ServerManager::waterPumpConfig->automaticPump == false)
+  {
+    waterPumpManager->CalculateWaterLevel();
+    waterPumpManager->StopPump();
   }
 }
