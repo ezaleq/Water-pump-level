@@ -1,0 +1,6 @@
+{
+    "sid" : "{your account sid}",
+    "authToken": "{your auth token}",
+    "from": "{twilio phone number}",
+    "to": ["{phone number for receipters}"],
+}

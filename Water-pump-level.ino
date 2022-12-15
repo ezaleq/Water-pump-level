@@ -1,6 +1,6 @@
-#include "WhatsappNotificator.h"
-#include "WaterPumpManager.h"
-#include "ServerManager.h"
+#include "src/ServerManager.h"
+#include "src/WaterPumpManager.h"
+#include "src/WhatsappNotificator.h"
 ServerManager serverManager;
 
 auto t0 = millis();
@@ -8,34 +8,43 @@ auto t1 = t0;
 byte echoPin = D5;
 byte triggerPin = D6;
 byte relayPin = D7;
+bool alreadySentMessage = false;
 WaterPumpManager* waterPumpManager;
-String phones[] = {"whatsapp:+5491154541063"};
-WhatsappConfiguration wppConfig = {
-  "AC46f7092d6da6bc5f1f714e8a9573d90b",
-  "46f9d55b4d1247a36aa66c09ac714c05",
-  "whatsapp:+14155238886",
-  phones
-};
+WhatsappNotificator* wppNotificator;
 
-void setup() {
+void setup()
+{
   Serial.begin(9600);
-  waterPumpManager = new WaterPumpManager(wppConfig, 1);
   // Initialize the output variables as outputs
-  serverManager.ConnectToWiFi("Quevedo's Family", "42393445");
-  serverManager.Initialize();
-  serverManager.Start();
   pinMode(echoPin, INPUT);
   pinMode(triggerPin, OUTPUT);
   pinMode(relayPin, OUTPUT);
   digitalWrite(relayPin, 0);
+  // Start server
+  serverManager.Initialize();
+  serverManager.ConnectToWiFi();
+  serverManager.Start();
+  // Create whatsappNotificator and waterPumpManager
+  wppNotificator = new WhatsappNotificator(ServerManager::wppConfig.get());
+  waterPumpManager = new WaterPumpManager(ServerManager::waterPumpConfig.get(), triggerPin, echoPin);
 }
 
-void loop() {
-  WaterPumpManager::CalculateWaterLevel(triggerPin, echoPin);
-  if (WaterPumpManager::isRunning && WaterPumpManager::automaticPump) {
+void loop()
+{
+  waterPumpManager->CalculateWaterLevel();
+  if (WaterPumpManager::isRunning && ServerManager::waterPumpConfig->automaticPump)
+  {
+    alreadySentMessage = false;
     waterPumpManager->CheckWaterLevel();
   }
-  else if (WaterPumpManager::ShouldWaterPumpStart()) {
+  else if (waterPumpManager->ShouldWaterPumpStart())
+  {
+    alreadySentMessage = false;
     waterPumpManager->StartPump(relayPin);
+  }
+  else if (WaterPumpManager::waterError && !alreadySentMessage)
+  {
+    wppNotificator->SendMessage("Se detectó una insuficiencia de corriente de agua en la red.\n Los sistemas automáticos de prendido de bomba fueron deshabilitados. Habilitelos nuevamente desde la página web una vez solucionado el problema.");
+    alreadySentMessage = true;
   }
 }

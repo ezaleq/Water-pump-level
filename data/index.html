@@ -8,6 +8,65 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css"
         integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
     <title>Bomba de agua</title>
+    <style>
+        .waviy {
+            position: relative;
+        }
+
+        .waviy span {
+            position: relative;
+            display: inline-block;
+            animation: waviy 1s infinite;
+            animation-delay: calc(.1s * var(--i));
+        }
+
+        .pop-outin {
+            animation: 2s anim-popoutin ease infinite;
+        }
+
+        @keyframes anim-popoutin {
+            0% {
+                color: black;
+                transform: scale(0);
+                opacity: 0;
+                text-shadow: 0 0 0 rgba(0, 0, 0, 0);
+            }
+
+            25% {
+                color: red;
+                transform: scale(2);
+                opacity: 1;
+                text-shadow: 3px 10px 5px rgba(0, 0, 0, 0.5);
+            }
+
+            50% {
+                color: black;
+                transform: scale(1);
+                opacity: 1;
+                text-shadow: 1px 0 0 rgba(0, 0, 0, 0);
+            }
+
+            100% {
+                /* animate nothing to add pause at the end of animation */
+                transform: scale(1);
+                opacity: 1;
+                text-shadow: 1px 0 0 rgba(0, 0, 0, 0);
+            }
+        }
+
+        @keyframes waviy {
+
+            0%,
+            40%,
+            100% {
+                transform: translateY(0)
+            }
+
+            20% {
+                transform: translateY(-10px)
+            }
+        }
+    </style>
 </head>
 
 <body>
@@ -15,7 +74,23 @@
     <div class="container text-center">
         <div class="row border">
             <div class="col border p-2">
-                <h4>Estado actual del tanque</h4>
+                <h4 class="line">
+                    Estado actual del tanque
+                    <span class="text-success waviy" style="display: none" id="pumpRunning">
+                        <span class="--i:1">
+                            <svg style="width:24px;height:24px" viewBox="0 0 24 24">
+                                <path fill="currentColor"
+                                    d="M19,14.5C19,14.5 21,16.67 21,18A2,2 0 0,1 19,20A2,2 0 0,1 17,18C17,16.67 19,14.5 19,14.5M5,18V9A2,2 0 0,1 3,7A2,2 0 0,1 5,5V4A2,2 0 0,1 7,2H9A2,2 0 0,1 11,4V5H19A2,2 0 0,1 21,7V9L21,11A1,1 0 0,1 22,12A1,1 0 0,1 21,13H17A1,1 0 0,1 16,12A1,1 0 0,1 17,11V9H11V18H12A2,2 0 0,1 14,20V22H2V20A2,2 0 0,1 4,18H5Z" />
+                            </svg>
+                        </span>
+                    </span>
+                    <span class="text-danger pop-outin" style="display: none" id="waterError">
+                        <svg style="width:24px;height:24px" viewBox="0 0 24 24">
+                            <path fill="currentColor"
+                                d="M5.7 2.5A2 2 0 0 1 7 2H9A2 2 0 0 1 11 4V5H19A2 2 0 0 1 21 7V11A1 1 0 0 1 21 13H17A1 1 0 0 1 17 11V9H12.2M20.84 22.73L22.11 21.46L11 10.34L2.39 1.73L1.11 3L3.65 5.54A2 2 0 0 0 5 9V18H4A2 2 0 0 0 2 20V22H14V20A2 2 0 0 0 12 18H11V12.89Z" />
+                        </svg>
+                    </span>
+                </h4>
                 <div class="progress m-4">
                     <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0"
                         aria-valuemax="100">0</div>
@@ -36,21 +111,45 @@
                             <input type="checkbox" id="automaticPump" class="form-check-input">
                             <label for="automaticPump">Bomba automática</label>
                         </div>
+                        <div class="col text-center">
+                            <label for="pumpStopTrigger">Detección de corte de agua</label>
+                            <input type="number" class="form-control text-center" id="pumpStopTrigger"
+                                placeholder="10 (s)" min="0">
+                        </div>
+                        <div class="col">
+                            <label for="pumpMinTrigger">Mínimo (%)</label>
+                            <input type="number" class="form-control text-center" placeholder="50%" id="pumpMinTrigger"
+                                min="0" max="100">
+                        </div>
+                        <div class="col">
+                            <label for="pumpMaxTrigger">Máximo (%)</label>
+                            <input type="number" class="form-control text-center" placeholder="100%" id="pumpMaxTrigger"
+                                min="0" max="100">
+                        </div>
+                        <div class="col">
+                            <label for="tankHeight">Altura (cm)</label>
+                            <input type="number" class="form-control text-center" placeholder="120cm" id="tankHeight"
+                                min="0">
+                        </div>
                     </div>
                     <div class="row p-3">
-                        <div class="col text-center">
-                            <label for="pumpStopTrigger">Tiempo de detección de insuficiencia de agua en la red</label>
-                            <input type="number" class="form-control" id="pumpStopTrigger" placeholder="10 (s)">
-                        </div>
-                    </div>
-                    <div class="row">
                         <div class="col">
-                            <label for="pumpMinTrigger">Activar cuando llegue al %</label>
-                            <input type="number" class="form-control" placeholder="50%" id="pumpMinTrigger">
+                            <label for="sid">SID</label>
+                            <input type="text" class="form-control text-center" placeholder="SID" id="sid">
                         </div>
                         <div class="col">
-                            <label for="pumpMaxTrigger">Apagar cuando llegue al %</label>
-                            <input type="number" class="form-control" placeholder="100%" id="pumpMaxTrigger">
+                            <label for="token">AuthToken</label>
+                            <input type="text" class="form-control text-center" placeholder="Token" id="token">
+                        </div>
+                        <div class="col">
+                            <label for="fromPhone">Bot number</label>
+                            <input type="tel" class="form-control text-center" placeholder="+1 1111-2222"
+                                id="fromPhone">
+                        </div>
+                        <div class="col">
+                            <label for="toPhone">Receiver numbers</label>
+                            <input type="tel" class="form-control text-center" placeholder="+1 1111-2222"
+                                id="toPhone">
                         </div>
                     </div>
                 </div>
@@ -74,6 +173,9 @@
     <script src="https://code.highcharts.com/8.0/highcharts.js"></script>
 
     <script>
+        $("#pumpRunning").hide();
+        $("#waterError").hide();
+        loadConfigurations();
         var chartT = new Highcharts.Chart({
             chart: { renderTo: 'plot' },
             title: { text: 'Llenado del tanque' },
@@ -99,7 +201,8 @@
         });
         setInterval(async () => {
             const { data } = await axios.get("/api/current-water-level");
-            const percentage = data.value.toFixed(2);
+            const percentage = data.waterLevel.toFixed(2);
+
             const xDate = (new Date()).getTime();
             if (chartT.series[0].data.length > 40) {
                 chartT.series[0].addPoint([xDate, parseFloat(percentage)], true, true, true);
@@ -107,7 +210,34 @@
                 chartT.series[0].addPoint([xDate, parseFloat(percentage)], true, false, true);
             }
             $(".progress-bar").css("width", percentage + "%").attr("aria-valuenow", percentage).text(percentage + "%");
+            if (data.pumpRunning) {
+                $("#pumpRunning").show();
+            }
+            else {
+                $("#pumpRunning").hide();
+            }
+            if (data.waterError) {
+                $("#waterError").show();
+            }
+            else {
+                $("#waterError").hide();
+            }
         }, 5000);
+
+        function loadConfigurations() {
+            axios.get("/api/configuration").then((response) => {
+                const { data } = response;
+                $("#automaticPump").prop("checked", data.automaticPump);
+                $("#pumpStopTrigger").val(data.pumpStopTrigger);
+                $("#pumpMinTrigger").val(data.pumpMinTrigger);
+                $("#pumpMaxTrigger").val(data.pumpMaxTrigger);
+                $("#tankHeight").val(data.tankHeight);
+                $("#sid").val(data.Sid);
+                $("#token").val(data.token);
+                $("#fromPhone").val(data.fromPhone);
+                $("#toPhone").val(data.toPhone.join(";"));
+            });
+        }
     </script>
 </body>
 

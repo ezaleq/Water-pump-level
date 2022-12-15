@@ -1,0 +1,7 @@
+{
+    "automaticPump" : true,
+    "minWaterLevel": 30,
+    "maxWaterLevel": 80,
+    "timeToDetectWaterInsufficiency": 60,
+    "waterTankHeight": 9
+}
