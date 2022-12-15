@@ -3,8 +3,6 @@
 #include "src/WhatsappNotificator.h"
 ServerManager serverManager;
 
-auto t0 = millis();
-auto t1 = t0;
 byte echoPin = D5;
 byte triggerPin = D6;
 byte relayPin = D7;
@@ -49,7 +47,6 @@ void loop()
   }
   else if (ServerManager::waterPumpConfig->automaticPump == false)
   {
-    waterPumpManager->CalculateWaterLevel();
     waterPumpManager->StopPump();
   }
 }
