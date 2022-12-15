@@ -21,6 +21,7 @@ public:
   {
     for (auto i = 0; i < config->ToLength; i++)
     {
+      SetupClient();
       String payload = "From=whatsapp:$from&To=whatsapp:$to&Body=$body";
       payload.replace("$from", config->From);
       payload.replace("$to", config->To[i]);
@@ -28,7 +29,11 @@ public:
       payload.replace("+", "%2B");
       auto httpCode = this->httpClient.POST(payload);
       Serial.println("HTTP Code: " + String(httpCode));
-      httpClient.end();
+      if (httpCode != HTTP_CODE_CREATED)
+      {
+        Serial.println("Response" + this->httpClient.getString());
+      }
+      this->httpClient.end();
     }
   }
 
