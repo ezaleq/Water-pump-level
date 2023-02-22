@@ -201,34 +201,42 @@
                 dateTimeLabelFormats: { second: '%H:%M:%S' }
             },
             yAxis: {
-                title: { text: 'Porcentaje %' }
+                title: { text: 'Porcentaje %' },
+                tickPositions: [0, 100]
             },
             credits: { enabled: false }
         });
-        setInterval(async () => {
-            const { data } = await axios.get("/api/current-water-level");
-            const percentage = data.waterLevel.toFixed(2);
+        run();
 
-            const xDate = (new Date()).getTime();
-            if (chartT.series[0].data.length > 40) {
-                chartT.series[0].addPoint([xDate, parseFloat(percentage)], true, true, true);
-            } else {
-                chartT.series[0].addPoint([xDate, parseFloat(percentage)], true, false, true);
+        async function run() {
+            while(true) {
+                const { data } = await axios.get("/api/current-water-level");
+                const percentage = data.waterLevel.toFixed(2);
+
+                let xDate = (new Date()).getTime();
+                // Remove 3 hours from xDate
+                xDate -= 3 * 60 * 60 * 1000;
+                if (chartT.series[0].data.length > 40) {
+                    chartT.series[0].addPoint([xDate, parseFloat(percentage)], true, true, true);
+                } else {
+                    chartT.series[0].addPoint([xDate, parseFloat(percentage)], true, false, true);
+                }
+                $(".progress-bar").css("width", percentage + "%").attr("aria-valuenow", percentage).text(percentage + "%");
+                if (data.pumpRunning) {
+                    $("#pumpRunning").show();
+                }
+                else {
+                    $("#pumpRunning").hide();
+                }
+                if (data.waterError) {
+                    $("#waterError").show();
+                }
+                else {
+                    $("#waterError").hide();
+                }
+                await new Promise(r => setTimeout(r, 5000));
             }
-            $(".progress-bar").css("width", percentage + "%").attr("aria-valuenow", percentage).text(percentage + "%");
-            if (data.pumpRunning) {
-                $("#pumpRunning").show();
-            }
-            else {
-                $("#pumpRunning").hide();
-            }
-            if (data.waterError) {
-                $("#waterError").show();
-            }
-            else {
-                $("#waterError").hide();
-            }
-        }, 5000);
+        }
 
         function loadConfigurations() {
             axios.get("/api/configuration").then((response) => {

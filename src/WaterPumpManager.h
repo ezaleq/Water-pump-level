@@ -7,19 +7,19 @@ class WaterPumpManager
 {
 
 private:
-  WaterPumpConfiguration* config;
+  WaterPumpConfiguration *config;
   unsigned long startTimePump = millis();
   byte triggerPin = 0;
   byte echoPin = 0;
   float startWaterLevel = 0;
   byte relayPin = 0;
+
 public:
   static bool isRunning;
   static bool waterError;
   static float waterLevel;
 
-
-  WaterPumpManager(WaterPumpConfiguration* config, byte triggerPin, byte echoPin)
+  WaterPumpManager(WaterPumpConfiguration *config, byte triggerPin, byte echoPin)
   {
     this->triggerPin = triggerPin;
     this->echoPin = echoPin;
@@ -73,7 +73,6 @@ public:
   }
 
 private:
-
   void HandleWaterInsufficiency()
   {
     config->automaticPump = false;
@@ -86,11 +85,19 @@ private:
   }
   static float GetDistance(byte triggerPin, byte echoPin)
   {
-    digitalWrite(triggerPin, HIGH);
-    delayMicroseconds(10);
-    digitalWrite(triggerPin, LOW);
-    auto duration = pulseIn(echoPin, HIGH);
-    auto distance = (duration / 29) / 2;
+    auto sum = 0;
+    auto iterations = 50;
+    for(auto i=0; i < iterations; i++) {
+      digitalWrite(triggerPin, LOW);
+      delayMicroseconds(2);
+      digitalWrite(triggerPin, HIGH);
+      delayMicroseconds(10);
+      digitalWrite(triggerPin, LOW);
+      auto duration = pulseIn(echoPin, HIGH);
+      sum += duration;
+    }
+    auto avgDuration = sum / iterations;
+    auto distance = (avgDuration / 29.4) / 2;
     delay(1000);
     return distance;
   }
