@@ -2,6 +2,7 @@
 #define WATER_PUMP_MANAGER_H
 
 #include "structs/WaterPumpConfiguration.h"
+#include <NewPing.h>
 
 class WaterPumpManager
 {
@@ -13,6 +14,7 @@ private:
   byte echoPin = 0;
   float startWaterLevel = 0;
   byte relayPin = 0;
+  NewPing* newPing = NULL;
 
 public:
   static bool isRunning;
@@ -21,6 +23,7 @@ public:
 
   WaterPumpManager(WaterPumpConfiguration *config, byte triggerPin, byte echoPin)
   {
+    this->newPing = new NewPing(triggerPin, echoPin);
     this->triggerPin = triggerPin;
     this->echoPin = echoPin;
     this->config = config;
@@ -28,7 +31,8 @@ public:
 
   void CalculateWaterLevel()
   {
-    auto distance = GetDistance(this->triggerPin, this->echoPin);
+    // auto distance = GetDistance(this->triggerPin, this->echoPin);
+    auto distance = GetDistance();
     WaterPumpManager::waterLevel = 100 - (distance * 100) / config->waterTankHeight;
     if (WaterPumpManager::waterLevel > 100)
       CalculateWaterLevel();
@@ -83,22 +87,29 @@ private:
   {
     return (millis() - startTimePump) / 1000;
   }
-  static float GetDistance(byte triggerPin, byte echoPin)
+  // static float GetDistance(byte triggerPin, byte echoPin)
+  // {
+  //   auto sum = 0;
+  //   auto iterations = 50;
+  //   for(auto i=0; i < iterations; i++) {
+  //     digitalWrite(triggerPin, LOW);
+  //     delayMicroseconds(2);
+  //     digitalWrite(triggerPin, HIGH);
+  //     delayMicroseconds(10);
+  //     digitalWrite(triggerPin, LOW);
+  //     auto duration = pulseIn(echoPin, HIGH);
+  //     sum += duration;
+  //   }
+  //   auto avgDuration = sum / iterations;
+  //   auto distance = (avgDuration / 29.4) / 2;
+  //   delay(1000);
+  //   return distance;
+  // }
+  unsigned long GetDistance()
   {
-    auto sum = 0;
-    auto iterations = 50;
-    for(auto i=0; i < iterations; i++) {
-      digitalWrite(triggerPin, LOW);
-      delayMicroseconds(2);
-      digitalWrite(triggerPin, HIGH);
-      delayMicroseconds(10);
-      digitalWrite(triggerPin, LOW);
-      auto duration = pulseIn(echoPin, HIGH);
-      sum += duration;
-    }
-    auto avgDuration = sum / iterations;
-    auto distance = (avgDuration / 29.4) / 2;
-    delay(1000);
+    delay(50);
+    auto distance =  this->newPing->convert_cm(newPing->ping_median(10, config->waterTankHeight));
+    Serial.println(distance);
     return distance;
   }
 };
