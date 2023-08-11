@@ -201,6 +201,8 @@ private:
     this->server = new AsyncWebServer(this->port);
     this->server->on("/", HTTP_GET, [](AsyncWebServerRequest *request)
                      { request->send(SPIFFS, "/index.html", String(), false); });
+    this->server->on("/realdata", HTTP_GET, [](AsyncWebServerRequest *request)
+                    { request->send(SPIFFS, "/realdata.html", String(), false); });
     this->server->on("/api/configuration", HTTP_GET, HandleGetConfiguration);
     this->server->on("/api/configuration", HTTP_POST, HandlePostConfiguration);
     this->server->on("/api/current-water-level", HTTP_GET, HandleGetCurrentWaterLevel);

@@ -1,6 +1,6 @@
 #include "src/ServerManager.h"
 #include "src/WaterPumpManager.h"
-#include "src/WhatsappNotificator.h"
+#include <AsyncElegantOTA.h>
 #include "src/Ota.h"
 
 ServerManager serverManager;
@@ -27,12 +27,12 @@ void setup()
   // Create whatsappNotificator and waterPumpManager
   wppNotificator = new WhatsappNotificator(ServerManager::wppConfig.get());
   waterPumpManager = new WaterPumpManager(ServerManager::waterPumpConfig.get(), triggerPin, echoPin);
-  otaManager = new OtaManager();
+  AsyncElegantOTA.begin(serverManager.server);
 }
 
 void loop()
 {
-  otaManager->handle();
+  AsyncElegantOTA.loop();
   waterPumpManager->CalculateWaterLevel();
   if (WaterPumpManager::isRunning && ServerManager::waterPumpConfig->automaticPump)
   {
