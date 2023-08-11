@@ -20,6 +20,7 @@ public:
   static bool isRunning;
   static bool waterError;
   static float waterLevel;
+  static int distanceInCm;
 
   WaterPumpManager(WaterPumpConfiguration *config, byte triggerPin, byte echoPin)
   {
@@ -31,8 +32,8 @@ public:
 
   void CalculateWaterLevel()
   {
-    // auto distance = GetDistance(this->triggerPin, this->echoPin);
     auto distance = GetDistance();
+    WaterPumpManager::distanceInCm = distance;
     WaterPumpManager::waterLevel = 100 - (distance * 100) / config->waterTankHeight;
     if (WaterPumpManager::waterLevel > 100)
       CalculateWaterLevel();
@@ -75,6 +76,12 @@ public:
     this->startTimePump = millis();
     this->startWaterLevel = WaterPumpManager::waterLevel;
   }
+  unsigned long GetDistance()
+  {
+    delay(50);
+    auto distance =  this->newPing->convert_cm(newPing->ping_median(100, config->waterTankHeight));
+    return distance;
+  }
 
 private:
   void HandleWaterInsufficiency()
@@ -105,15 +112,10 @@ private:
   //   delay(1000);
   //   return distance;
   // }
-  unsigned long GetDistance()
-  {
-    delay(50);
-    auto distance =  this->newPing->convert_cm(newPing->ping_median(10, config->waterTankHeight));
-    Serial.println(distance);
-    return distance;
-  }
+
 };
 float WaterPumpManager::waterLevel = 0;
 bool WaterPumpManager::isRunning = false;
 bool WaterPumpManager::waterError = false;
+int WaterPumpManager::distanceInCm = 0;
 #endif

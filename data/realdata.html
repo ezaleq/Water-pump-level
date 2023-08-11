@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,9 +8,14 @@
         integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
     <title>Document</title>
 </head>
+
 <body>
 
-    <div id="realDataChart"></div>
+    <div class="row border">
+        <div class="col border">
+            <div id="plot"></div>
+        </div>
+    </div>
     <!-- Scripts -->
     <script src="https://code.jquery.com/jquery-3.6.1.js"
         integrity="sha256-3zlB5s2uwoUzrXK3BT7AX3FyvojsraNFxCc2vC/7pNI=" crossorigin="anonymous"></script>
@@ -21,10 +27,44 @@
         crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script src="https://code.highcharts.com/8.0/highcharts.js"></script>
     <script type="text/javascript">
-        $(function() {
-            alert("lol")
+        $(function () {
+            const chart = Highcharts.chart('plot', {
+                title: { text: 'Distancia y encendido de bomba' },
+                series: [{
+                    showInLegend: false,
+                    data: [[]]
+                }],
+                plotOptions: {
+                    line: {
+                        animation: false,
+                        dataLabels: { enabled: true }
+                    },
+                    series: { color: '#059e8a', data: [] }
+                },
+                xAxis: {
+                    type: 'datetime',
+                    dateTimeLabelFormats: { second: '%M:%S' }
+                },
+                yAxis: {
+                    title: { text: 'cm' },
+                },
+                time: {
+                    useUTC: false
+                },
+                accessibility: {
+                    enabled: false
+                },
+                credits: { enabled: false },
+            });
+            setInterval(async function () {
+                const { data } = await axios.get("/api/real-distance");
+                chart.series[0].addPoint([new Date(), data.distance], true, false);
+            }, 1000)
         });
+
+
     </script>
 
 </body>
+
 </html>

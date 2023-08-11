@@ -206,6 +206,14 @@ private:
     this->server->on("/api/configuration", HTTP_GET, HandleGetConfiguration);
     this->server->on("/api/configuration", HTTP_POST, HandlePostConfiguration);
     this->server->on("/api/current-water-level", HTTP_GET, HandleGetCurrentWaterLevel);
+    this->server->on("/api/real-distance", HTTP_GET, HandleGetRealDistance);
+  }
+
+  static void HandleGetRealDistance(AsyncWebServerRequest *request)
+  {
+      auto distance = WaterPumpManager::distanceInCm;
+      String distanceString = String(distance);
+      request->send(200, "application/json", "{\"distance\": " + distanceString + "}");
   }
 
   static void HandleGetCurrentWaterLevel(AsyncWebServerRequest *request)
