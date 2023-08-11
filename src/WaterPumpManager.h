@@ -2,7 +2,6 @@
 #define WATER_PUMP_MANAGER_H
 
 #include "structs/WaterPumpConfiguration.h"
-#include <NewPing.h>
 
 class WaterPumpManager
 {
@@ -14,7 +13,6 @@ private:
   byte echoPin = 0;
   float startWaterLevel = 0;
   byte relayPin = 0;
-  NewPing* newPing = NULL;
 
 public:
   static bool isRunning;
@@ -24,7 +22,6 @@ public:
 
   WaterPumpManager(WaterPumpConfiguration *config, byte triggerPin, byte echoPin)
   {
-    this->newPing = new NewPing(triggerPin, echoPin);
     this->triggerPin = triggerPin;
     this->echoPin = echoPin;
     this->config = config;
@@ -76,14 +73,56 @@ public:
     this->startTimePump = millis();
     this->startWaterLevel = WaterPumpManager::waterLevel;
   }
-  unsigned long GetDistance()
+  double GetDistance(int numberOfRepeats = 10)
   {
-    delay(50);
-    auto distance =  this->newPing->convert_cm(newPing->ping_median(100, config->waterTankHeight));
-    return distance;
+    auto currentDistance = 0.0f;
+    while (currentDistance != 0)
+    {
+      currentDistance = GetDistanceInternal();
+    }
+    std::vector<double> distances(currentDistance);
+    for (auto i = 0; i < numberOfRepeats; i++)
+    {
+      auto validDistance = getValidDistance(distances, 5);
+      distances.push_back(validDistance);
+    }
+    return getAverage(distances);
   }
 
 private:
+  double getValidDistance(std::vector<double> const &distances, double errorRange)
+  {
+    auto average = getAverage(distances);
+    auto min = average - errorRange;
+    auto max = average + errorRange;
+    auto currentDistance = 0;
+    while (currentDistance < min || currentDistance > max || currentDistance == 0)
+    {
+      currentDistance = GetDistanceInternal();
+    }
+    return currentDistance;
+  }
+  double getAverage(std::vector<double> const &values)
+  {
+    auto sum = 0.0f;
+    for (auto i = 0; i < values.size(); i++)
+    {
+      sum += values[i];
+    }
+    return sum / values.size();
+  }
+
+  double GetDistanceInternal()
+  {
+    digitalWrite(this->triggerPin, LOW);
+    delayMicroseconds(15);
+    digitalWrite(this->triggerPin, HIGH);
+    delayMicroseconds(50); // Use a longer pulse width for JSN-SR04T
+    digitalWrite(this->triggerPin, LOW);
+    auto duration = pulseIn(this->echoPin, HIGH);
+    auto distance = duration * 0.034 / 2;
+    return distance;
+  }
   void HandleWaterInsufficiency()
   {
     config->automaticPump = false;
@@ -94,25 +133,6 @@ private:
   {
     return (millis() - startTimePump) / 1000;
   }
-  // static float GetDistance(byte triggerPin, byte echoPin)
-  // {
-  //   auto sum = 0;
-  //   auto iterations = 50;
-  //   for(auto i=0; i < iterations; i++) {
-  //     digitalWrite(triggerPin, LOW);
-  //     delayMicroseconds(2);
-  //     digitalWrite(triggerPin, HIGH);
-  //     delayMicroseconds(10);
-  //     digitalWrite(triggerPin, LOW);
-  //     auto duration = pulseIn(echoPin, HIGH);
-  //     sum += duration;
-  //   }
-  //   auto avgDuration = sum / iterations;
-  //   auto distance = (avgDuration / 29.4) / 2;
-  //   delay(1000);
-  //   return distance;
-  // }
-
 };
 float WaterPumpManager::waterLevel = 0;
 bool WaterPumpManager::isRunning = false;
