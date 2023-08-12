@@ -2,7 +2,7 @@
 #define WATER_PUMP_MANAGER_H
 
 #define BAD_SENSOR_LECTURE -1
-#include "structs/WaterPumpConfiguration.hpp"
+#include "structs/waterpump_configuration.hpp"
 
 class WaterPumpManager
 {
