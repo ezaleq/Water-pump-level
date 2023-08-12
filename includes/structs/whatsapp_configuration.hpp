@@ -3,11 +3,11 @@
 
 struct WhatsappConfiguration
 {
-  String Sid = "";
-  String AuthToken = "";
-  String From = "";
-  String *To = NULL;
-  unsigned int ToLength = 0;
+  String sid = "";
+  String authToken = "";
+  String from = "";
+  String *to = NULL;
+  unsigned int toLength = 0;
 };
 
 #endif

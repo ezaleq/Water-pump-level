@@ -14,17 +14,17 @@ public:
   WhatsappNotificator(WhatsappConfiguration* configuration)
   {
     this->config = configuration;
-    this->SetupClient();
+    this->setupClient();
   }
 
-  void SendMessage(String message)
+  void sendMessage(String message)
   {
     for (auto i = 0; i < config->ToLength; i++)
     {
-      SetupClient();
+      setupClient();
       String payload = "From=whatsapp:$from&To=whatsapp:$to&Body=$body";
       payload.replace("$from", config->From);
-      payload.replace("$to", config->To[i]);
+      payload.replace("$to", config->to[i]);
       payload.replace("$body", message);
       payload.replace("+", "%2B");
       auto httpCode = this->httpClient.POST(payload);
@@ -38,14 +38,14 @@ public:
   }
 
 private:
-  void SetupClient()
+  void setupClient()
   {
     client.setInsecure();
     String url = "https://api.twilio.com/2010-04-01/Accounts/$Sid/Messages.json";
-    url.replace("$Sid", config->Sid);
+    url.replace("$Sid", config->sid);
     this->httpClient.begin(client, url);
     this->httpClient.addHeader("content-type", "application/x-www-form-urlencoded");
-    this->httpClient.setAuthorization(config->Sid.c_str(), config->AuthToken.c_str());
+    this->httpClient.setAuthorization(config->sid.c_str(), config->authToken.c_str());
   }
   unsigned int arrayLength = 0;
   WhatsappConfiguration *config;

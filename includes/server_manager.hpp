@@ -15,7 +15,7 @@ class WaterPumpManager;
 class ServerManager
 {
 public:
-  void ConnectToWiFi()
+  void connectToWiFi()
   {
     Serial.print("\nConnecting to ");
     Serial.println(this->ssid);
@@ -27,22 +27,22 @@ public:
       Serial.print(".");
     }
   }
-  void Initialize(uint16_t port = 80)
+  void initialize(uint16_t port = 80)
   {
     this->port = port;
-    this->InitializeSpiffs();
-    this->LoadConfiguration();
-    this->InitializeServer();
+    this->initializeSpiffs();
+    this->loadConfiguration();
+    this->initializeServer();
   }
 
-  void LoadConfiguration()
+  void loadConfiguration()
   {
-    LoadWifiConfiguration();
-    LoadTwilioConfiguration();
-    LoadWaterPumpConfiguration();
+    loadWifiConfiguration();
+    loadTwilioConfiguration();
+    loadWaterPumpConfiguration();
   }
 
-  void LoadTwilioConfiguration()
+  void loadTwilioConfiguration()
   {
     Serial.println("==========================");
     Serial.println("Loading twilio config");
@@ -71,32 +71,32 @@ public:
     String authToken = doc["authToken"];
     String fromNumber = doc["from"];
     int toLength = doc["toLength"];
-    wppConfig->Sid = accountSid;
-    wppConfig->AuthToken = authToken;
-    wppConfig->From = fromNumber;
-    wppConfig->ToLength = toLength;
+    wppConfig->sid = accountSid;
+    wppConfig->authToken = authToken;
+    wppConfig->from = fromNumber;
+    wppConfig->toLength = toLength;
     size_t i = 0;
     JsonArray array = doc["to"];
-    wppConfig->To = new String[toLength];
+    wppConfig->to = new String[toLength];
 
     for (auto i = 0; i < toLength; i++)
     {
       String to = array[i];
       Serial.println(to);
-      wppConfig->To[i] = to;
+      wppConfig->to[i] = to;
     }
-    Serial.println("-> AccountSid: " + wppConfig->Sid);
-    Serial.println("-> AuthToken: " + wppConfig->AuthToken);
-    Serial.println("-> From: " + wppConfig->From);
-    Serial.println("-> ToLength: " + String(wppConfig->ToLength));
-    for (auto i = 0; i < wppConfig->ToLength; i++)
+    Serial.println("-> AccountSid: " + wppConfig->sid);
+    Serial.println("-> AuthToken: " + wppConfig->authToken);
+    Serial.println("-> From: " + wppConfig->from);
+    Serial.println("-> ToLength: " + String(wppConfig->toLength));
+    for (auto i = 0; i < wppConfig->toLength; i++)
     {
-      Serial.println("-> To[" + String(i) + "]: " + wppConfig->To[i]);
+      Serial.println("-> To[" + String(i) + "]: " + wppConfig->to[i]);
     }
     Serial.println("==========================");
   }
 
-  void LoadWaterPumpConfiguration()
+  void loadWaterPumpConfiguration()
   {
     Serial.println("----------------------------------------");
     Serial.println("Loading pump config... ");
@@ -140,7 +140,7 @@ public:
 
   }
 
-  void LoadWifiConfiguration()
+  void loadWifiConfiguration()
   {
     Serial.println("$$$$$$$$$$$$$$$$$$$$$$$$$");
     Serial.println("Loading WiFi config...");
@@ -174,7 +174,7 @@ public:
 
   }
 
-  void Start()
+  void start()
   {
     this->server->begin();
     Serial.print("Server started on IP ");
@@ -187,7 +187,7 @@ public:
   static std::shared_ptr<WaterPumpConfiguration> waterPumpConfig;
 
 private:
-  void InitializeSpiffs()
+  void initializeSpiffs()
   {
     if (!SPIFFS.begin())
     {
@@ -195,7 +195,7 @@ private:
       return;
     }
   }
-  void InitializeServer()
+  void initializeServer()
   {
     Serial.println("Initializing server...");
     this->server = new AsyncWebServer(this->port);
@@ -203,20 +203,20 @@ private:
                      { request->send(SPIFFS, "/index.html", String(), false); });
     this->server->on("/realdata", HTTP_GET, [](AsyncWebServerRequest *request)
                     { request->send(SPIFFS, "/realdata.html", String(), false); });
-    this->server->on("/api/configuration", HTTP_GET, HandleGetConfiguration);
-    this->server->on("/api/configuration", HTTP_POST, HandlePostConfiguration);
-    this->server->on("/api/current-water-level", HTTP_GET, HandleGetCurrentWaterLevel);
-    this->server->on("/api/real-distance", HTTP_GET, HandleGetRealDistance);
+    this->server->on("/api/configuration", HTTP_GET, handleGetConfiguration);
+    this->server->on("/api/configuration", HTTP_POST, handlePostConfiguration);
+    this->server->on("/api/current-water-level", HTTP_GET, handleGetCurrentWaterLevel);
+    this->server->on("/api/real-distance", HTTP_GET, handleGetRealDistance);
   }
 
-  static void HandleGetRealDistance(AsyncWebServerRequest *request)
+  static void handleGetRealDistance(AsyncWebServerRequest *request)
   {
       auto distance = WaterPumpManager::distanceInCm;
       String distanceString = String(distance);
       request->send(200, "application/json", "{\"distance\": " + distanceString + "}");
   }
 
-  static void HandleGetCurrentWaterLevel(AsyncWebServerRequest *request)
+  static void handleGetCurrentWaterLevel(AsyncWebServerRequest *request)
   {
     String response;
     StaticJsonDocument<48> json;
@@ -227,7 +227,7 @@ private:
     request->send(200, "application/json", response);
   }
 
-  static void HandleGetConfiguration(AsyncWebServerRequest *request)
+  static void handleGetConfiguration(AsyncWebServerRequest *request)
   {
     String response;
     StaticJsonDocument<384> json;
@@ -237,20 +237,20 @@ private:
     object["pumpMaxTrigger"] = waterPumpConfig->maxWaterLevel;
     object["pumpStopTrigger"] = waterPumpConfig->timeToDetectWaterInsufficiency;
     object["tankHeight"] = waterPumpConfig->waterTankHeight;
-    object["Sid"] = wppConfig->Sid;
-    object["token"] = wppConfig->AuthToken;
-    object["fromPhone"] = wppConfig->From;
+    object["Sid"] = wppConfig->sid;
+    object["token"] = wppConfig->authToken;
+    object["fromPhone"] = wppConfig->from;
     auto arr = object.createNestedArray("toPhone");
-    for (int i = 0; i < wppConfig->ToLength; i++)
+    for (int i = 0; i < wppConfig->toLength; i++)
     {
-      arr.add(wppConfig->To[i]);
+      arr.add(wppConfig->to[i]);
     }
 
     serializeJson(json, response);
     request->send(200, "application/json", response);
   }
 
-  static void SavePumpConfiguration()
+  static void savePumpConfiguration()
   {
     Serial.println("Saving pump config...");
     File file = SPIFFS.open("/pump.dat", "w");
@@ -269,7 +269,7 @@ private:
     file.close();
   }
 
-  static void SaveTwilioConfiguration()
+  static void saveTwilioConfiguration()
   {
     Serial.println("Saving Twilio config...");
     File file = SPIFFS.open("/twilio.dat", "w");
@@ -280,21 +280,21 @@ private:
     }
     StaticJsonDocument<512> doc;
     auto arr = doc.createNestedArray("to");
-    doc["sid"] = wppConfig->Sid;
-    doc["authToken"] = wppConfig->AuthToken;
-    doc["from"] = wppConfig->From;
-    doc["toLength"] = wppConfig->ToLength;
+    doc["sid"] = wppConfig->sid;
+    doc["authToken"] = wppConfig->authToken;
+    doc["from"] = wppConfig->from;
+    doc["toLength"] = wppConfig->toLength;
     Serial.println("Adding phone numbers to JsonArray...");
-    for (int i = 0; i < wppConfig->ToLength; i++)
+    for (int i = 0; i < wppConfig->toLength; i++)
     {
-      Serial.println("Adding " + wppConfig->To[i]);
-      arr.add(wppConfig->To[i]);
+      Serial.println("Adding " + wppConfig->to[i]);
+      arr.add(wppConfig->to[i]);
     }
     serializeJson(doc, file);
     file.close();
   }
 
-  static void DeserializeTwilioConfiguration(AsyncWebServerRequest *request)
+  static void deserializeTwilioConfiguration(AsyncWebServerRequest *request)
   {
     Serial.println("Obtaining twilio configuration from post request...");
     auto sid = request->getParam("sid", true)->value();
@@ -302,7 +302,7 @@ private:
     auto from = request->getParam("from", true)->value();
     auto to = request->getParam("to", true)->value();
     auto commasCount = std::count(to.begin(), to.end(), ',');
-    wppConfig->ToLength = 0;
+    wppConfig->toLength = 0;
     String *toArr = NULL;
     if (commasCount > 0)
     {
@@ -319,31 +319,31 @@ private:
       }
       auto lastString = to.substring(startIndex, to.length());
       toArr[commasCount] = lastString;
-      wppConfig->ToLength = commasCount + 1;
+      wppConfig->toLength = commasCount + 1;
     }
     else if (to.length() > 0)
     {
       commasCount = 1;
       toArr = new String[1];
       toArr[0] = to;
-      wppConfig->ToLength = 1;
+      wppConfig->toLength = 1;
     }
     Serial.println("- Sid: " + sid);
     Serial.println("- AuthToken: " + authToken);
     Serial.println("- From: " + from);
-    for (auto i = 0; i < wppConfig->ToLength; i++)
+    for (auto i = 0; i < wppConfig->toLength; i++)
     {
       Serial.println("- To[" + String(i) + "] = " + toArr[i]);
     }
     int count = 0;
 
-    wppConfig->Sid = sid;
-    wppConfig->AuthToken = authToken;
-    wppConfig->From = from;
-    wppConfig->To = toArr;
+    wppConfig->sid = sid;
+    wppConfig->authToken = authToken;
+    wppConfig->from = from;
+    wppConfig->to = toArr;
   }
 
-  static void DeserializePumpConfiguration(AsyncWebServerRequest *request)
+  static void deserializePumpConfiguration(AsyncWebServerRequest *request)
   {
     Serial.println("Obtaining pump configuration from POST request...");
     bool automaticPump = request->getParam("automaticPump", true)->value().toInt() == 1 ? true : false;
@@ -364,14 +364,14 @@ private:
     waterPumpConfig->waterTankHeight = waterTankHeight;
   }
 
-  static void HandlePostConfiguration(AsyncWebServerRequest *request)
+  static void handlePostConfiguration(AsyncWebServerRequest *request)
   {
     if (request->hasParam("automaticPump", true) && request->hasParam("minWaterLevel", true) && request->hasParam("maxWaterLevel", true) && request->hasParam("timeToDetectWaterInsufficiency", true) && request->hasParam("waterTankHeight", true) && request->hasParam("sid", true) && request->hasParam("authToken", true) && request->hasParam("from", true) && request->hasParam("to", true))
     {
-      DeserializeTwilioConfiguration(request);
-      DeserializePumpConfiguration(request);
-      SaveTwilioConfiguration();
-      SavePumpConfiguration();
+      deserializeTwilioConfiguration(request);
+      deserializePumpConfiguration(request);
+      saveTwilioConfiguration();
+      savePumpConfiguration();
       request->send(200, "application/json", "{\"status\": \"ok\"}");
     }
     else

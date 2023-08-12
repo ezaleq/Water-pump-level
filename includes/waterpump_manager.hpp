@@ -28,25 +28,25 @@ public:
     this->config = config;
   }
 
-  void CalculateWaterLevel()
+  void calculateWaterLevel()
   {
-    auto distance = GetDistance();
+    auto distance = getDistance();
     if (distance == BAD_SENSOR_LECTURE)
     {
-      this->HandleWaterInsufficiency();
+      this->handleWaterInsufficiency();
       return;
     }
 
     WaterPumpManager::distanceInCm = distance;
     WaterPumpManager::waterLevel = 100 - (distance * 100) / config->waterTankHeight;
     if (WaterPumpManager::waterLevel > 100)
-      CalculateWaterLevel();
+      calculateWaterLevel();
   }
-  bool ShouldWaterPumpStart()
+  bool shouldWaterPumpStart()
   {
     return WaterPumpManager::waterLevel <= config->minWaterLevel && config->automaticPump;
   }
-  void StartPump(byte relayPin)
+  void startPump(byte relayPin)
   {
     waterError = false;
     this->relayPin = relayPin;
@@ -56,16 +56,16 @@ public:
     isRunning = true;
     this->relayPin = relayPin;
   }
-  void CheckWaterLevel()
+  void checkWaterLevel()
   {
-    if (this->GetPassedSeconds() > config->timeToDetectWaterInsufficiency && WaterPumpManager::waterLevel <= this->startWaterLevel + 10)
+    if (this->getPassedSeconds() > config->timeToDetectWaterInsufficiency && WaterPumpManager::waterLevel <= this->startWaterLevel + 10)
     {
       Serial.println("Error in water");
-      this->HandleWaterInsufficiency();
+      this->handleWaterInsufficiency();
     }
     else if (WaterPumpManager::waterLevel >= config->maxWaterLevel)
     {
-      StopPump();
+      stopPump();
     }
     else if (WaterPumpManager::waterLevel > startWaterLevel)
     { // If the waterLevel updated and incremented in level, reset timer
@@ -73,17 +73,17 @@ public:
       startWaterLevel = WaterPumpManager::waterLevel;
     }
   }
-  void StopPump()
+  void stopPump()
   {
     isRunning = false;
     digitalWrite(this->relayPin, LOW);
     this->startTimePump = millis();
     this->startWaterLevel = WaterPumpManager::waterLevel;
   }
-  double GetDistance(int numberOfRepeats = 10)
+  double getDistance(int numberOfRepeats = 10)
   {
     std::vector<double> distances;
-    auto firstDistance = GetDistanceOrReturnErrorAfterMaxTries();
+    auto firstDistance = getDistanceOrReturnErrorAfterMaxTries();
     if (firstDistance == BAD_SENSOR_LECTURE)
     {
       return BAD_SENSOR_LECTURE;
@@ -110,7 +110,7 @@ private:
 
     while(currentDistance < min || currentDistance > max)
     {
-      currentDistance = GetDistanceOrReturnErrorAfterMaxTries();
+      currentDistance = getDistanceOrReturnErrorAfterMaxTries();
       if (currentDistance == BAD_SENSOR_LECTURE)
         return BAD_SENSOR_LECTURE;
     }
@@ -128,7 +128,7 @@ private:
   }
 
   // If after the maxTries stills returns 0 cm, it will return BAD_SENSOR_LECTURE indicating an error
-  double GetDistanceOrReturnErrorAfterMaxTries(int maxTries = 100)
+  double getDistanceOrReturnErrorAfterMaxTries(int maxTries = 100)
   {
     for (auto tries = 0; tries < maxTries; tries++)
     {
@@ -150,13 +150,13 @@ private:
     auto distance = duration * 0.034 / 2;
     return distance;
   }
-  void HandleWaterInsufficiency()
+  void handleWaterInsufficiency()
   {
     config->automaticPump = false;
-    StopPump();
+    stopPump();
     waterError = true;
   }
-  int GetPassedSeconds()
+  int getPassedSeconds()
   {
     return (millis() - startTimePump) / 1000;
   }

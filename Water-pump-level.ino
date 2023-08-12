@@ -20,9 +20,9 @@ void setup()
   pinMode(relayPin, OUTPUT);
   digitalWrite(relayPin, 0);
   // Start server
-  serverManager.Initialize();
-  serverManager.ConnectToWiFi();
-  serverManager.Start();
+  serverManager.initialize();
+  serverManager.connectToWiFi();
+  serverManager.start();
   // Create whatsappNotificator and waterPumpManager
   waterPumpManager = new WaterPumpManager(ServerManager::waterPumpConfig.get(), triggerPin, echoPin);
   wppNotificator = new WhatsappNotificator(ServerManager::wppConfig.get());
@@ -32,24 +32,24 @@ void setup()
 void loop()
 {
   AsyncElegantOTA.loop();
-  waterPumpManager->CalculateWaterLevel();
+  waterPumpManager->calculateWaterLevel();
   if (WaterPumpManager::isRunning && ServerManager::waterPumpConfig->automaticPump)
   {
-    waterPumpManager->CheckWaterLevel();
+    waterPumpManager->checkWaterLevel();
     alreadySentMessage = false;
   }
-  else if (waterPumpManager->ShouldWaterPumpStart())
+  else if (waterPumpManager->shouldWaterPumpStart())
   {
     alreadySentMessage = false;
-    waterPumpManager->StartPump(relayPin);
+    waterPumpManager->startPump(relayPin);
   }
   else if (WaterPumpManager::waterError && !alreadySentMessage)
   {
-    wppNotificator->SendMessage("Se detectó una insuficiencia de corriente de agua en la red.\n Los sistemas automáticos de prendido de bomba fueron deshabilitados. Habilitelos nuevamente desde la página web una vez solucionado el problema.");
+    wppNotificator->sendMessage("Se detectó una insuficiencia de corriente de agua en la red.\n Los sistemas automáticos de prendido de bomba fueron deshabilitados. Habilitelos nuevamente desde la página web una vez solucionado el problema.");
     alreadySentMessage = true;
   }
   else if (ServerManager::waterPumpConfig->automaticPump == false)
   {
-    waterPumpManager->StopPump();
+    waterPumpManager->stopPump();
   }
 }
