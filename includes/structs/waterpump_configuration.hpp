@@ -1,5 +1,6 @@
 #ifndef WATER_PUMP_CONFIGURATION_H
 #define WATER_PUMP_CONFIGURATION_H
+#include <Arduino.h>
 
 struct WaterPumpConfiguration
 {
