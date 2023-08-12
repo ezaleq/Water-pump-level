@@ -32,7 +32,7 @@ public:
     this->port = port;
     this->initializeSpiffs();
     this->loadConfiguration();
-    this->initializeServer();
+    this->mapRoutes();
   }
 
   void loadConfiguration()
@@ -137,7 +137,6 @@ public:
     Serial.println("-> TimeToDetectWaterInsufficiency: " + String(waterPumpConfig->timeToDetectWaterInsufficiency));
     Serial.println("-> WaterTankHeight: " + String(waterPumpConfig->waterTankHeight));
     Serial.println("----------------------------------------");
-
   }
 
   void loadWifiConfiguration()
@@ -171,7 +170,6 @@ public:
     this->ssid = ssid;
     this->password = password;
     Serial.println("$$$$$$$$$$$$$$$$$$$$$$$$$");
-
   }
 
   void start()
@@ -195,60 +193,12 @@ private:
       return;
     }
   }
-  void initializeServer()
-  {
-    Serial.println("Initializing server...");
-    this->server = new AsyncWebServer(this->port);
-    this->server->on("/", HTTP_GET, [](AsyncWebServerRequest *request)
-                     { request->send(SPIFFS, "/index.html", String(), false); });
-    this->server->on("/realdata", HTTP_GET, [](AsyncWebServerRequest *request)
-                    { request->send(SPIFFS, "/realdata.html", String(), false); });
-    this->server->on("/api/configuration", HTTP_GET, handleGetConfiguration);
-    this->server->on("/api/configuration", HTTP_POST, handlePostConfiguration);
-    this->server->on("/api/current-water-level", HTTP_GET, handleGetCurrentWaterLevel);
-    this->server->on("/api/real-distance", HTTP_GET, handleGetRealDistance);
-  }
+  void mapRoutes();
 
-  static void handleGetRealDistance(AsyncWebServerRequest *request)
-  {
-      auto distance = WaterPumpManager::distanceInCm;
-      String distanceString = String(distance);
-      request->send(200, "application/json", "{\"distance\": " + distanceString + "}");
-  }
-
-  static void handleGetCurrentWaterLevel(AsyncWebServerRequest *request)
-  {
-    String response;
-    StaticJsonDocument<48> json;
-    json["waterLevel"] = WaterPumpManager::waterLevel;
-    json["pumpRunning"] = WaterPumpManager::isRunning;
-    json["waterError"] = WaterPumpManager::waterError;
-    serializeJson(json, response);
-    request->send(200, "application/json", response);
-  }
-
-  static void handleGetConfiguration(AsyncWebServerRequest *request)
-  {
-    String response;
-    StaticJsonDocument<384> json;
-    auto object = json.to<JsonObject>();
-    object["automaticPump"] = waterPumpConfig->automaticPump;
-    object["pumpMinTrigger"] = waterPumpConfig->minWaterLevel;
-    object["pumpMaxTrigger"] = waterPumpConfig->maxWaterLevel;
-    object["pumpStopTrigger"] = waterPumpConfig->timeToDetectWaterInsufficiency;
-    object["tankHeight"] = waterPumpConfig->waterTankHeight;
-    object["Sid"] = wppConfig->sid;
-    object["token"] = wppConfig->authToken;
-    object["fromPhone"] = wppConfig->from;
-    auto arr = object.createNestedArray("toPhone");
-    for (int i = 0; i < wppConfig->toLength; i++)
-    {
-      arr.add(wppConfig->to[i]);
-    }
-
-    serializeJson(json, response);
-    request->send(200, "application/json", response);
-  }
+  static void handleGetRealDistance(AsyncWebServerRequest *request);
+  static void handleGetCurrentWaterLevel(AsyncWebServerRequest *request);
+  static void handleGetConfiguration(AsyncWebServerRequest *request);
+  static void handlePostConfiguration(AsyncWebServerRequest *request);
 
   static void savePumpConfiguration()
   {
@@ -364,27 +314,9 @@ private:
     waterPumpConfig->waterTankHeight = waterTankHeight;
   }
 
-  static void handlePostConfiguration(AsyncWebServerRequest *request)
-  {
-    if (request->hasParam("automaticPump", true) && request->hasParam("minWaterLevel", true) && request->hasParam("maxWaterLevel", true) && request->hasParam("timeToDetectWaterInsufficiency", true) && request->hasParam("waterTankHeight", true) && request->hasParam("sid", true) && request->hasParam("authToken", true) && request->hasParam("from", true) && request->hasParam("to", true))
-    {
-      deserializeTwilioConfiguration(request);
-      deserializePumpConfiguration(request);
-      saveTwilioConfiguration();
-      savePumpConfiguration();
-      request->send(200, "application/json", "{\"status\": \"ok\"}");
-    }
-    else
-    {
-      request->send(400, "application/json", "{\"status\": \"error\"}");
-    }
-  }
   String ssid;
   String password;
   uint16_t port = 80;
 };
-
-std::shared_ptr<WhatsappConfiguration> ServerManager::wppConfig = std::make_shared<WhatsappConfiguration>();
-std::shared_ptr<WaterPumpConfiguration> ServerManager::waterPumpConfig = std::make_shared<WaterPumpConfiguration>();
 
 #endif
