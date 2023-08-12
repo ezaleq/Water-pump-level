@@ -92,7 +92,8 @@ public:
     for (auto i = 0; i < numberOfRepeats; i++)
     {
       auto validDistance = getValidDistance(distances, 5);
-      if (validDistance == BAD_SENSOR_LECTURE) {
+      if (validDistance == BAD_SENSOR_LECTURE)
+      {
         return BAD_SENSOR_LECTURE;
       }
       distances.push_back(validDistance);
@@ -108,14 +109,13 @@ private:
     auto max = average + errorRange;
     auto currentDistance = 0;
 
-    while(currentDistance < min || currentDistance > max)
+    while (currentDistance < min || currentDistance > max)
     {
       currentDistance = getDistanceOrReturnErrorAfterMaxTries();
       if (currentDistance == BAD_SENSOR_LECTURE)
         return BAD_SENSOR_LECTURE;
     }
     return currentDistance;
-
   }
   double getAverage(std::vector<double> const &values)
   {
@@ -132,14 +132,14 @@ private:
   {
     for (auto tries = 0; tries < maxTries; tries++)
     {
-      auto currentDistance = GetDistanceInternal();
+      auto currentDistance = getDistanceInternal();
       if (currentDistance != 0)
         return currentDistance;
     }
     return BAD_SENSOR_LECTURE;
   }
 
-  double GetDistanceInternal()
+  double getDistanceInternal()
   {
     digitalWrite(this->triggerPin, LOW);
     delayMicroseconds(15);
@@ -150,12 +150,14 @@ private:
     auto distance = duration * 0.034 / 2;
     return distance;
   }
+
   void handleWaterInsufficiency()
   {
     config->automaticPump = false;
     stopPump();
     waterError = true;
   }
+
   int getPassedSeconds()
   {
     return (millis() - startTimePump) / 1000;

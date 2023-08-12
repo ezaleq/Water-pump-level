@@ -19,11 +19,11 @@ public:
 
   void sendMessage(String message)
   {
-    for (auto i = 0; i < config->ToLength; i++)
+    for (auto i = 0; i < config->toLength; i++)
     {
       setupClient();
       String payload = "From=whatsapp:$from&To=whatsapp:$to&Body=$body";
-      payload.replace("$from", config->From);
+      payload.replace("$from", config->from);
       payload.replace("$to", config->to[i]);
       payload.replace("$body", message);
       payload.replace("+", "%2B");
