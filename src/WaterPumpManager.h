@@ -1,6 +1,7 @@
 #ifndef WATER_PUMP_MANAGER_H
 #define WATER_PUMP_MANAGER_H
 
+#define BAD_SENSOR_LECTURE -1
 #include "structs/WaterPumpConfiguration.h"
 
 class WaterPumpManager
@@ -30,6 +31,12 @@ public:
   void CalculateWaterLevel()
   {
     auto distance = GetDistance();
+    if (distance == BAD_SENSOR_LECTURE)
+    {
+      this->HandleWaterInsufficiency();
+      return;
+    }
+
     WaterPumpManager::distanceInCm = distance;
     WaterPumpManager::waterLevel = 100 - (distance * 100) / config->waterTankHeight;
     if (WaterPumpManager::waterLevel > 100)
@@ -75,15 +82,19 @@ public:
   }
   double GetDistance(int numberOfRepeats = 10)
   {
-    auto currentDistance = 0.0f;
-    while (currentDistance != 0)
+    std::vector<double> distances;
+    auto firstDistance = GetDistanceOrReturnErrorAfterMaxTries();
+    if (firstDistance == BAD_SENSOR_LECTURE)
     {
-      currentDistance = GetDistanceInternal();
+      return BAD_SENSOR_LECTURE;
     }
-    std::vector<double> distances(currentDistance);
+    distances.push_back(firstDistance);
     for (auto i = 0; i < numberOfRepeats; i++)
     {
       auto validDistance = getValidDistance(distances, 5);
+      if (validDistance == BAD_SENSOR_LECTURE) {
+        return BAD_SENSOR_LECTURE;
+      }
       distances.push_back(validDistance);
     }
     return getAverage(distances);
@@ -96,11 +107,15 @@ private:
     auto min = average - errorRange;
     auto max = average + errorRange;
     auto currentDistance = 0;
-    while (currentDistance < min || currentDistance > max || currentDistance == 0)
+
+    while(currentDistance < min || currentDistance > max)
     {
-      currentDistance = GetDistanceInternal();
+      currentDistance = GetDistanceOrReturnErrorAfterMaxTries();
+      if (currentDistance == BAD_SENSOR_LECTURE)
+        return BAD_SENSOR_LECTURE;
     }
     return currentDistance;
+
   }
   double getAverage(std::vector<double> const &values)
   {
@@ -110,6 +125,18 @@ private:
       sum += values[i];
     }
     return sum / values.size();
+  }
+
+  // If after the maxTries stills returns 0 cm, it will return BAD_SENSOR_LECTURE indicating an error
+  double GetDistanceOrReturnErrorAfterMaxTries(int maxTries = 100)
+  {
+    for (auto tries = 0; tries < maxTries; tries++)
+    {
+      auto currentDistance = GetDistanceInternal();
+      if (currentDistance != 0)
+        return currentDistance;
+    }
+    return BAD_SENSOR_LECTURE;
   }
 
   double GetDistanceInternal()
