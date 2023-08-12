@@ -1,6 +1,6 @@
-#include "src/ServerManager.h"
-#include "src/WhatsappNotificator.h"
-#include "src/WaterPumpManager.h"
+#include "includes/ServerManager.hpp"
+#include "includes/WhatsappNotificator.hpp"
+#include "includes/WaterPumpManager.hpp"
 #include <AsyncElegantOTA.h>
 
 ServerManager serverManager;

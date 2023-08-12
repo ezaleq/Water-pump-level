@@ -6,9 +6,9 @@
 #include <ESPAsyncTCP.h>
 #include <ESPAsyncWebServer.h>
 #include <FS.h>
-#include "structs/WaterPumpConfiguration.h"
-#include "structs/WhatsappConfiguration.h"
-#include "WaterPumpManager.h"
+#include "structs/WaterPumpConfiguration.hpp"
+#include "structs/WhatsappConfiguration.hpp"
+#include "WaterPumpManager.hpp"
 
 class WaterPumpManager;
 
