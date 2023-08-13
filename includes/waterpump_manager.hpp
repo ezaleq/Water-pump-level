@@ -1,8 +1,9 @@
 #ifndef WATER_PUMP_MANAGER_H
 #define WATER_PUMP_MANAGER_H
 
-#include "structs/waterpump_configuration.hpp"
+#include <memory>
 #include <Arduino.h>
+#include "structs/waterpump_configuration.hpp"
 
 class WaterPumpManager
 {
@@ -41,6 +42,7 @@ private:
   double getDistanceInternal();
   void handleWaterInsufficiency();
   int getPassedSeconds();
+  double getFirstDistance();
 };
 
 #endif

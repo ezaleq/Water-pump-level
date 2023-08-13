@@ -1,6 +1,7 @@
 #include <vector>
 #include "../includes/waterpump_manager.hpp"
 #define BAD_SENSOR_LECTURE -1
+#define MAX_TRIES_FOR_COMPARING_DISTANCE 15
 
 
 static double getAverage(std::vector<double> const &values)
@@ -31,7 +32,7 @@ void WaterPumpManager::calculateWaterLevel()
 double WaterPumpManager::getDistance(int numberOfRepeats)
 {
     std::vector<double> distances;
-    auto firstDistance = this->getDistanceOrReturnErrorAfterMaxTries();
+    auto firstDistance = this->getFirstDistance();
     if (firstDistance == BAD_SENSOR_LECTURE)
     {
         return BAD_SENSOR_LECTURE;
@@ -55,12 +56,16 @@ double WaterPumpManager::getValidDistance(std::vector<double> const &distances, 
     auto min = average - errorRange;
     auto max = average + errorRange;
     auto currentDistance = 0;
+    int currentTries = 0;
 
     while (currentDistance < min || currentDistance > max)
     {
+        if (currentTries >= MAX_TRIES_FOR_COMPARING_DISTANCE)
+            return BAD_SENSOR_LECTURE;
         currentDistance = this->getDistanceOrReturnErrorAfterMaxTries();
         if (currentDistance == BAD_SENSOR_LECTURE)
             return BAD_SENSOR_LECTURE;
+        currentTries++;
     }
     return currentDistance;
 }
@@ -86,4 +91,19 @@ double WaterPumpManager::getDistanceInternal()
     auto duration = pulseIn(this->echoPin, HIGH);
     auto distance = duration * 0.034 / 2;
     return distance;
+}
+
+double WaterPumpManager::getFirstDistance()
+{
+    std::vector<double> distances;
+    for (auto i = 0; i < 20; i++)
+    {
+        auto currentDistance = this->getDistanceOrReturnErrorAfterMaxTries();
+        if (currentDistance == BAD_SENSOR_LECTURE)
+            continue;
+        distances.push_back(currentDistance);
+    }
+    if (distances.size() == 0)
+        return BAD_SENSOR_LECTURE;
+    return getAverage(distances);
 }

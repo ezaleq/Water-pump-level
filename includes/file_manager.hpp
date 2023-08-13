@@ -11,7 +11,4 @@ class FileManager
     static std::unique_ptr<DynamicJsonDocument> getFile(const char* path, size_t maxCharBuffer, size_t jsonDocumentSize);
 };
 
-
-class Test
-
 #endif
