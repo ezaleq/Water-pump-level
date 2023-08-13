@@ -15,25 +15,8 @@ class WaterPumpManager;
 class ServerManager
 {
 public:
-  void connectToWiFi()
-  {
-    Serial.print("\nConnecting to ");
-    Serial.println(this->ssid);
-    WiFi.begin(this->ssid.c_str(), this->password.c_str());
-    Serial.println("Waiting to connect .");
-    while (WiFi.status() != WL_CONNECTED)
-    {
-      delay(500);
-      Serial.print(".");
-    }
-  }
-  void initialize(uint16_t port = 80)
-  {
-    this->port = port;
-    this->initializeSpiffs();
-    this->loadConfiguration();
-    this->mapRoutes();
-  }
+  void connectToWiFi();
+  void initialize(uint16_t port = 80);
 
   void loadConfiguration()
   {
@@ -172,14 +155,7 @@ public:
     Serial.println("$$$$$$$$$$$$$$$$$$$$$$$$$");
   }
 
-  void start()
-  {
-    this->server->begin();
-    Serial.print("Server started on IP ");
-    Serial.print(WiFi.localIP());
-    Serial.print(" on port ");
-    Serial.println(this->port);
-  }
+  void start();
   AsyncWebServer *server;
   static std::shared_ptr<WhatsappConfiguration> wppConfig;
   static std::shared_ptr<WaterPumpConfiguration> waterPumpConfig;
