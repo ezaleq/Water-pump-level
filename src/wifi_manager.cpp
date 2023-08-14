@@ -3,7 +3,6 @@
 void ServerManager::initialize(uint16_t port)
 {
     this->port = port;
-    this->initializeSpiffs();
     this->loadConfiguration();
     this->mapRoutes();
 }

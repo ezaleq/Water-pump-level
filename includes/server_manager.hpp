@@ -15,162 +15,21 @@ class WaterPumpManager;
 class ServerManager
 {
 public:
-  void connectToWiFi();
   void initialize(uint16_t port = 80);
-
-  void loadConfiguration()
-  {
-    loadWifiConfiguration();
-    loadTwilioConfiguration();
-    loadWaterPumpConfiguration();
-  }
-
-  void loadTwilioConfiguration()
-  {
-    Serial.println("==========================");
-    Serial.println("Loading twilio config");
-    File file = SPIFFS.open("/twilio.dat", "r");
-    if (!file)
-    {
-      Serial.println("Error opening twilio.dat");
-      return;
-    }
-    size_t size = file.size();
-    if (size > 1024)
-    {
-      Serial.println("twilio.dat file size is too large");
-      return;
-    }
-    std::shared_ptr<char[]> buf(new char[size]);
-    file.readBytes(buf.get(), size);
-    DynamicJsonDocument doc(512);
-    DeserializationError error = deserializeJson(doc, buf.get());
-    if (error)
-    {
-      Serial.println("Error parsing twilio.dat");
-      return;
-    }
-    String accountSid = doc["sid"];
-    String authToken = doc["authToken"];
-    String fromNumber = doc["from"];
-    int toLength = doc["toLength"];
-    wppConfig->sid = accountSid;
-    wppConfig->authToken = authToken;
-    wppConfig->from = fromNumber;
-    wppConfig->toLength = toLength;
-    size_t i = 0;
-    JsonArray array = doc["to"];
-    wppConfig->to = new String[toLength];
-
-    for (auto i = 0; i < toLength; i++)
-    {
-      String to = array[i];
-      Serial.println(to);
-      wppConfig->to[i] = to;
-    }
-    Serial.println("-> AccountSid: " + wppConfig->sid);
-    Serial.println("-> AuthToken: " + wppConfig->authToken);
-    Serial.println("-> From: " + wppConfig->from);
-    Serial.println("-> ToLength: " + String(wppConfig->toLength));
-    for (auto i = 0; i < wppConfig->toLength; i++)
-    {
-      Serial.println("-> To[" + String(i) + "]: " + wppConfig->to[i]);
-    }
-    Serial.println("==========================");
-  }
-
-  void loadWaterPumpConfiguration()
-  {
-    Serial.println("----------------------------------------");
-    Serial.println("Loading pump config... ");
-    File file = SPIFFS.open("/pump.dat", "r");
-    if (!file)
-    {
-      Serial.println("Error opening pump.dat");
-      return;
-    }
-    size_t size = file.size();
-    if (size > 1024)
-    {
-      Serial.println("pump.dat file size is too large");
-      return;
-    }
-    std::shared_ptr<char[]> buf(new char[size]);
-    file.readBytes(buf.get(), size);
-    DynamicJsonDocument doc(96);
-    DeserializationError error = deserializeJson(doc, buf.get());
-    if (error)
-    {
-      Serial.println("Error parsing pump.dat");
-      return;
-    }
-    bool automaticPump = doc["automaticPump"];
-    byte minWaterLevel = doc["minWaterLevel"];
-    byte maxWaterLevel = doc["maxWaterLevel"];
-    unsigned short int timeToDetectWaterInsufficiency = doc["timeToDetectWaterInsufficiency"];
-    unsigned short int waterTankHeight = doc["waterTankHeight"];
-    waterPumpConfig->automaticPump = automaticPump;
-    waterPumpConfig->minWaterLevel = minWaterLevel;
-    waterPumpConfig->maxWaterLevel = maxWaterLevel;
-    waterPumpConfig->timeToDetectWaterInsufficiency = timeToDetectWaterInsufficiency;
-    waterPumpConfig->waterTankHeight = waterTankHeight;
-    Serial.println("-> AutomaticPump: " + String(waterPumpConfig->automaticPump));
-    Serial.println("-> MinWaterLevel: " + String(waterPumpConfig->minWaterLevel));
-    Serial.println("-> MaxWaterLevel: " + String(waterPumpConfig->maxWaterLevel));
-    Serial.println("-> TimeToDetectWaterInsufficiency: " + String(waterPumpConfig->timeToDetectWaterInsufficiency));
-    Serial.println("-> WaterTankHeight: " + String(waterPumpConfig->waterTankHeight));
-    Serial.println("----------------------------------------");
-  }
-
-  void loadWifiConfiguration()
-  {
-    Serial.println("$$$$$$$$$$$$$$$$$$$$$$$$$");
-    Serial.println("Loading WiFi config...");
-    File file = SPIFFS.open("/wifi.dat", "r");
-    if (!file)
-    {
-      Serial.println("Error opening wifi.dat");
-      return;
-    }
-    size_t size = file.size();
-    if (size > 1024)
-    {
-      Serial.println("wifi.dat file size is too large");
-      return;
-    }
-    std::shared_ptr<char[]> buf(new char[size]);
-    file.readBytes(buf.get(), size);
-    DynamicJsonDocument json(32);
-    DeserializationError error = deserializeJson(json, buf.get());
-    if (error)
-    {
-      Serial.println("Error parsing wifi.dat");
-      return;
-    }
-    JsonObject obj = json.as<JsonObject>();
-    String ssid = obj[String("ssid")];
-    String password = obj[String("password")];
-    this->ssid = ssid;
-    this->password = password;
-    Serial.println("$$$$$$$$$$$$$$$$$$$$$$$$$");
-  }
-
+  void connectToWiFi();
   void start();
+
   AsyncWebServer *server;
   static std::shared_ptr<WhatsappConfiguration> wppConfig;
   static std::shared_ptr<WaterPumpConfiguration> waterPumpConfig;
 
 private:
-  void initializeSpiffs()
-  {
-    if (!SPIFFS.begin())
-    {
-      Serial.println("Error montando el administrador de archivos SPIFFS");
-      return;
-    }
-  }
+  void loadConfiguration();
+  void loadTwilioConfiguration();
+  void loadWaterPumpConfiguration();
+  void loadWifiConfiguration();
+private:
   void mapRoutes();
-
   static void handleGetRealDistance(AsyncWebServerRequest *request);
   static void handleGetCurrentWaterLevel(AsyncWebServerRequest *request);
   static void handleGetConfiguration(AsyncWebServerRequest *request);
