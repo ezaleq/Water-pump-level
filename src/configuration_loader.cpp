@@ -1,5 +1,7 @@
 #include "../includes/server_manager.hpp"
 #include "../includes/file_manager.hpp"
+#include <ArduinoJson.h>
+#include <memory>
 
 void ServerManager::loadConfiguration()
 {
@@ -68,4 +70,32 @@ void ServerManager::loadWifiConfiguration()
         Serial.println("Error parsing wifi.dat");
         ESP.reset();
     }
+}
+
+void ServerManager::savePumpConfiguration()
+{
+    auto json = DynamicJsonDocument(96);
+    json["automaticPump"] = waterPumpConfig->automaticPump;
+    json["minWaterLevel"] = waterPumpConfig->minWaterLevel;
+    json["maxWaterLevel"] = waterPumpConfig->maxWaterLevel;
+    json["timeToDetectWaterInsufficiency"] = waterPumpConfig->timeToDetectWaterInsufficiency;
+    json["waterTankHeight"] = waterPumpConfig->waterTankHeight;
+    FileManager::saveFile("pump.dat", json);
+}
+
+void ServerManager::saveTwilioConfiguration()
+{
+    auto doc = DynamicJsonDocument(512);
+    auto arr = doc.createNestedArray("to");
+    doc["sid"] = wppConfig->sid;
+    doc["authToken"] = wppConfig->authToken;
+    doc["from"] = wppConfig->from;
+    doc["toLength"] = wppConfig->toLength;
+    Serial.println("Adding phone numbers to JsonArray...");
+    for (int i = 0; i < wppConfig->toLength; i++)
+    {
+        Serial.println("Adding " + wppConfig->to[i]);
+        arr.add(wppConfig->to[i]);
+    }
+    FileManager::saveFile("/twilio.dat", doc);
 }

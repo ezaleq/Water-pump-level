@@ -1,7 +1,5 @@
-#include <memory>
-#include <ArduinoJson.h>
-#include <FS.h>
 #include "../includes/file_manager.hpp"
+#include <FS.h>
 
 void FileManager::init()
 {
@@ -39,3 +37,17 @@ void FileManager::parseFile(const char* path, size_t maxCharBuffer, size_t jsonD
   parseCallback(doc);
 }
 
+
+
+void FileManager::saveFile(const char* path, DynamicJsonDocument& jsonDoc)
+{
+  auto pathStr = String(path);
+  File file = SPIFFS.open(path, "w");
+  if (!file)
+  {
+      Serial.println("Error opening file '" + pathStr + "'");
+      return;
+  }
+  serializeJson(jsonDoc, file);
+  file.close();
+}
